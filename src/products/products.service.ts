@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Product } from '@prisma/client';
 import { HttpStatus, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
 
@@ -14,7 +14,7 @@ export class ProductsService extends PrismaClient implements OnModuleInit {
     this.logger.log('Connected to the database');
   }
 
-  async create(createProductDto: CreateProductDto) {
+  async create(createProductDto: CreateProductDto): Promise<Product> {
     return await this.product.create({
       data: {
         name: createProductDto.name,
@@ -23,7 +23,10 @@ export class ProductsService extends PrismaClient implements OnModuleInit {
     });
   }
 
-  async findAll(paginationDto: PaginationDto) {
+  async findAll(paginationDto: PaginationDto): Promise<{
+    data: Product[];
+    meta: PaginationDto;
+  }> {
     paginationDto.total = await this.product.count({
       where: {
         available: true,
@@ -46,7 +49,7 @@ export class ProductsService extends PrismaClient implements OnModuleInit {
     };
   }
 
-  async findOne(id: number) {
+  async findOne(id: number): Promise<Product> {
     const result = await this.product.findUnique({
       where: {
         id,
@@ -62,7 +65,10 @@ export class ProductsService extends PrismaClient implements OnModuleInit {
     return result;
   }
 
-  async update(id: number, updateProductDto: UpdateProductDto) {
+  async update(
+    id: number,
+    updateProductDto: UpdateProductDto,
+  ): Promise<Product> {
     await this.findOne(id);
     return await this.product.update({
       where: {
@@ -75,7 +81,7 @@ export class ProductsService extends PrismaClient implements OnModuleInit {
     });
   }
 
-  async remove(id: number) {
+  async remove(id: number): Promise<Product> {
     await this.findOne(id);
     // Hard delete
     // return await this.product.delete({
@@ -92,5 +98,26 @@ export class ProductsService extends PrismaClient implements OnModuleInit {
         available: false,
       },
     });
+  }
+
+  async validateProducts(productIds: number[]): Promise<Product[]> {
+    const ids = Array.from(new Set(productIds));
+    const products = await this.product.findMany({
+      where: {
+        id: {
+          in: ids,
+        },
+        available: true,
+      },
+    });
+
+    if (products.length !== ids.length) {
+      throw new RpcException({
+        message: 'One or more products are not available',
+        status: HttpStatus.BAD_REQUEST,
+      });
+    }
+
+    return products;
   }
 }
