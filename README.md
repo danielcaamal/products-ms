@@ -1,7 +1,27 @@
 # Product Microservice
-## Development
-1. Clonar el repositorio
-2. Instalar dependencias
-3. Crear un archivo .env basado en el env.template
-4. Ejecutar migración de prisma npx prisma migrate dev
-5. Ejecutar npm run start:dev
+
+## Installation (DEV)
+
+1. Clone the repository
+
+```bash
+git clone
+```
+
+2. Install dependencies
+
+```bash
+npm install
+```
+
+3. Create a .env file based on the env.template
+
+```bash
+cp .env.template .env
+```
+
+4. Execute the application
+
+```bash
+npm run start:dev
+```

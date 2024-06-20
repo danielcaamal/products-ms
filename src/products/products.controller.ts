@@ -49,4 +49,9 @@ export class ProductsController {
   async validateProducts(@Payload() productIds: number[]): Promise<Product[]> {
     return await this.productsService.validateProducts(productIds);
   }
+
+  @MessagePattern({ cmd: 'populate_products' })
+  async populateProducts(): Promise<void> {
+    return await this.productsService.populateProducts();
+  }
 }
